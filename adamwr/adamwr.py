@@ -165,7 +165,7 @@ class AdamWR(Optimizer):
                 recov_params.append(state["recov_param"])
                 state_steps.append(state['step'])
 
-            adamw(params_with_grad,
+            adamwr(params_with_grad,
                   grads,
                   exp_avgs,
                   exp_avg_sqs,
@@ -185,7 +185,7 @@ class AdamWR(Optimizer):
         return loss
 
 
-def adamw(params: List[Tensor],
+def adamwr(params: List[Tensor],
           grads: List[Tensor],
           exp_avgs: List[Tensor],
           exp_avg_sqs: List[Tensor],
