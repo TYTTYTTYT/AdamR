@@ -6,6 +6,9 @@ from typing import List, Optional
 
 # TODO: add a method to bind specific recovery parmeters.
 
+__all__ = ['AdamR', 'adamr']
+
+
 class AdamR(Optimizer):
     r"""Implements AdamW algorithm. TODO: Modify the documentation for adamr
 

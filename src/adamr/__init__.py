@@ -1,1 +1,3 @@
-__all__ = ['AdamWR', 'adamwr']
+from .adamr import AdamR
+
+__all__ = ['AdamR', 'adamr']
