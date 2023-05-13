@@ -1,0 +1,29 @@
+[build-system]
+requires = [
+    "hatchling",
+    "torch>=1.13.1",
+]
+build-backend = "hatchling.build"
+
+[project]
+name = "adamr"
+version = "0.0.1"
+authors = [
+  { name="Yintao Tai", email="tai.yintao@gmail.com" },
+]
+description = "Adam with weight recovery optimizer for pytorch"
+readme = "README.md"
+requires-python = ">=3.10"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: Apache Software License",
+    "Operating System :: OS Independent",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+    "Topic :: Scientific/Engineering :: Mathematics",
+    "Development Status :: 4 - Beta",
+]
+
+[project.urls]
+"Homepage" = "https://github.com/TYTTYTTYT/AdamR"
+"Bug Tracker" = "https://github.com/TYTTYTTYT/AdamR/issues"
+"repository" = "https://github.com/TYTTYTTYT/AdamR.git"

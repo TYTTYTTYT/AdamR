@@ -4,12 +4,10 @@ from torch import Tensor
 from torch.optim.optimizer import Optimizer
 from typing import List, Optional
 
-__all__ = ['AdamWR', 'adamwr']
-
 # TODO: add a method to bind specific recovery parmeters.
 
-class AdamWR(Optimizer):
-    r"""Implements AdamW algorithm. TODO: Modify the documentation for adamwr
+class AdamR(Optimizer):
+    r"""Implements AdamW algorithm. TODO: Modify the documentation for adamr
 
     .. math::
        \begin{aligned}
@@ -91,7 +89,7 @@ class AdamWR(Optimizer):
         defaults = dict(lr=lr, betas=betas, eps=eps,
                         weight_recovery=weight_recovery, amsgrad=amsgrad,
                         foreach=foreach, maximize=maximize, capturable=capturable)
-        super(AdamWR, self).__init__(params, defaults)
+        super(AdamR, self).__init__(params, defaults)
 
     def __setstate__(self, state):
         super().__setstate__(state)
@@ -137,7 +135,7 @@ class AdamWR(Optimizer):
                     continue
                 params_with_grad.append(p)
                 if p.grad.is_sparse:
-                    raise RuntimeError('AdamWR does not support sparse gradients')
+                    raise RuntimeError('AdamR does not support sparse gradients')
                 grads.append(p.grad)
 
                 state = self.state[p]
@@ -165,7 +163,7 @@ class AdamWR(Optimizer):
                 recov_params.append(state["recov_param"])
                 state_steps.append(state['step'])
 
-            adamwr(params_with_grad,
+            adamr(params_with_grad,
                   grads,
                   exp_avgs,
                   exp_avg_sqs,
@@ -185,7 +183,7 @@ class AdamWR(Optimizer):
         return loss
 
 
-def adamwr(params: List[Tensor],
+def adamr(params: List[Tensor],
           grads: List[Tensor],
           exp_avgs: List[Tensor],
           exp_avg_sqs: List[Tensor],
@@ -220,9 +218,9 @@ def adamwr(params: List[Tensor],
         raise RuntimeError('torch.jit.script not supported with foreach optimizers')
 
     if foreach and not torch.jit.is_scripting():
-        func = _multi_tensor_adamwr
+        func = _multi_tensor_adamr
     else:
-        func = _single_tensor_adamwr
+        func = _single_tensor_adamr
 
     func(params,
          grads,
@@ -241,7 +239,7 @@ def adamwr(params: List[Tensor],
          capturable=capturable)
 
 
-def _single_tensor_adamwr(params: List[Tensor],
+def _single_tensor_adamr(params: List[Tensor],
                          grads: List[Tensor],
                          exp_avgs: List[Tensor],
                          exp_avg_sqs: List[Tensor],
@@ -329,7 +327,7 @@ def _single_tensor_adamwr(params: List[Tensor],
             param.addcdiv_(exp_avg, denom, value=-step_size)
 
 
-def _multi_tensor_adamwr(params: List[Tensor],
+def _multi_tensor_adamr(params: List[Tensor],
                         grads: List[Tensor],
                         exp_avgs: List[Tensor],
                         exp_avg_sqs: List[Tensor],
