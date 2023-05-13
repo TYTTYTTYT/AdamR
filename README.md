@@ -5,6 +5,17 @@ Adam with weight Recovery optimizer
 AdamW tends to decay parameters towards zero, which makes the model "forget" the pretrained parameters during finetuning. Instead, AdamWR tries to recover parameters towards pretrained values during finetuning.
 
 ## Have a try
+
+### Install
+
+Install from PyPI
+
+```
+pip install adamr
+```
+
+### Train with AdamR
+
 Just like other PyTorch optimizers,
 
  ``` pyhon
