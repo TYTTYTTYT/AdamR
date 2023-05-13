@@ -4,11 +4,6 @@ from torch import Tensor
 from torch.optim.optimizer import Optimizer
 from typing import List, Optional
 
-# TODO: add a method to bind specific recovery parmeters.
-
-__all__ = ['AdamR', 'adamr']
-
-
 class AdamR(Optimizer):
     r"""Implements AdamW algorithm. TODO: Modify the documentation for adamr
 
@@ -76,8 +71,8 @@ class AdamR(Optimizer):
     """
 
     def __init__(self, params, lr=1e-3, betas=(0.9, 0.999), eps=1e-8,
-                 weight_recovery=1e-2, amsgrad=False, *, maximize: bool = False,
-                 foreach: Optional[bool] = None,
+                 weight_recovery=1e-2, recov_params=None, amsgrad=False, *, 
+                 maximize: bool = False, foreach: Optional[bool] = None,
                  capturable: bool = False):
         if not 0.0 <= lr:
             raise ValueError("Invalid learning rate: {}".format(lr))
@@ -93,6 +88,7 @@ class AdamR(Optimizer):
                         weight_recovery=weight_recovery, amsgrad=amsgrad,
                         foreach=foreach, maximize=maximize, capturable=capturable)
         super(AdamR, self).__init__(params, defaults)
+        self.__init_recov_groups(recov_params)
 
     def __setstate__(self, state):
         super().__setstate__(state)
@@ -106,6 +102,27 @@ class AdamR(Optimizer):
         if not step_is_tensor:
             for s in state_values:
                 s['step'] = torch.tensor(float(s['step']))
+                
+    def __init_recov_groups(self, recov_params):
+        if recov_params is None:
+            self.recov_groups = None
+            return
+        recov_groups = list(recov_params)
+        if len(recov_groups) == 0:
+            raise ValueError("optimizer got an empty parameter list")
+        if not isinstance(recov_groups[0], dict):
+            recov_groups = [{'recov_params': recov_groups}]
+
+        for recov_group in recov_groups:
+            recov_params = recov_group['recov_params']
+            if isinstance(recov_params, torch.Tensor):
+                recov_group['recov_params'] = [recov_params]
+            elif isinstance(recov_params, set):
+                raise TypeError('optimizer parameters need to be organized in ordered collections, but '
+                                'the ordering of tensors in sets will change between runs. Please use a list instead.')
+            else:
+                recov_group['recov_params'] = list(recov_params)
+        self.recov_groups = recov_groups
 
     @torch.no_grad()
     def step(self, closure=None):
@@ -122,7 +139,7 @@ class AdamR(Optimizer):
             with torch.enable_grad():
                 loss = closure()
 
-        for group in self.param_groups:
+        for group_idx, group in enumerate(self.param_groups):
             params_with_grad = []
             grads = []
             exp_avgs = []
@@ -132,8 +149,12 @@ class AdamR(Optimizer):
             state_steps = []
             amsgrad = group['amsgrad']
             beta1, beta2 = group['betas']
+            if self.recov_groups is None:
+                recov_group = None
+            else:
+                recov_group = self.recov_groups[group_idx]
 
-            for p in group['params']:
+            for p_idx, p in enumerate(group['params']):
                 if p.grad is None:
                     continue
                 params_with_grad.append(p)
@@ -155,7 +176,10 @@ class AdamR(Optimizer):
                         # Maintains max of all exp. moving avg. of sq. grad. values
                         state['max_exp_avg_sq'] = torch.zeros_like(p, memory_format=torch.preserve_format)
                     # The recovery parameter values
-                    state['recov_param'] = torch.clone(p, memory_format=torch.preserve_format).detach()
+                    if recov_group is None:
+                        state['recov_param'] = torch.clone(p, memory_format=torch.preserve_format).detach()
+                    else:
+                        state['recov_param'] = recov_group['recov_params'][p_idx]
 
                 exp_avgs.append(state['exp_avg'])
                 exp_avg_sqs.append(state['exp_avg_sq'])
